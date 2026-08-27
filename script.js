@@ -182,7 +182,7 @@ function loadState() {
         IDS.forEach(id => {
             if (id in data) setVal(id, data[id]);
         });
-        if ('target' in data) setVal('targetDmg', data.target);
+        if ('target' in data)  data.target);
         return true;
     } catch (_) { return false; }
 }
@@ -192,7 +192,7 @@ function loadState() {
 // ============================================================
 function resetDefault() {
     IDS.forEach(id => setVal(id, 0));
-    setVal('targetDmg', 150);
+     0);
     calc();
     saveState();
     showToast('↺ Сброшено к нулевым значениям');
