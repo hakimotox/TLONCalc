@@ -1,315 +1,103 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="light">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TLoN Калькулятор — патч 1.32</title>
-<style>
-:root{--bg:#f6f8fb;--card:#fff;--border:#f0f2f5;--text:#0d0d0d;--text2:#1f2937;--text3:#6b7280;--stat-bg:#fafbfc;--stat-border:#edf0f5;--result-bg:#f2f5fe;--result-border:#e0e7ff;--analysis-bg:#fef9e7;--analysis-border:#fde68a;--input-bg:#fff;--input-border:#d1d5db;--shadow:0 8px 30px rgba(0,0,0,0.06);--tooltip-bg:#1f2937;--tooltip-text:#fff;--good:#16a34a}
-[data-theme="dark"]{--bg:#1a1a2e;--card:#16213e;--border:#2a2a4a;--text:#e8e8f0;--text2:#c8c8d8;--text3:#8888aa;--stat-bg:#1e2a4a;--stat-border:#2a3a5a;--result-bg:#1a2a4a;--result-border:#2a4a6a;--analysis-bg:#2a2a1a;--analysis-border:#5a4a2a;--input-bg:#1a1a3a;--input-border:#3a3a5a;--shadow:0 8px 30px rgba(0,0,0,0.3);--tooltip-bg:#3a3a5a;--tooltip-text:#e8e8f0}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:var(--bg);display:flex;justify-content:center;padding:20px;transition:.3s}
-.calculator{max-width:980px;width:100%;background:var(--card);border-radius:20px;padding:30px;box-shadow:var(--shadow);border:1px solid var(--border);transition:.3s}
-.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:4px}
-h1{font-size:26px;font-weight:600;color:var(--text)}
-.theme-toggle{background:var(--stat-bg);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:30px;font-size:13px;cursor:pointer;transition:.15s}
-.theme-toggle:hover{background:var(--result-bg)}
-.subhead{font-size:15px;color:var(--text3);margin-bottom:28px;border-left:3px solid #4d6bfe;padding-left:14px;background:var(--stat-bg);border-radius:0 8px 8px 0}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}
-.stat-group{background:var(--stat-bg);border-radius:14px;padding:18px;border:1px solid var(--stat-border)}
-.stat-group h3{font-size:15px;font-weight:600;color:var(--text2);margin-bottom:14px;display:flex;gap:8px}
-.stat-group h3 .badge{background:#4d6bfe;color:#fff;font-size:11px;padding:0 10px;border-radius:20px;line-height:20px;margin-left:auto}
-.stat-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px;position:relative}
-.stat-row label{font-size:12.5px;font-weight:450;color:var(--text2);flex:0 0 115px;cursor:help;border-bottom:1px dashed var(--input-border);transition:.15s}
-.stat-row label:hover{color:#4d6bfe}
-.stat-row input{width:70px;padding:4px 5px;border:1px solid var(--input-border);border-radius:6px;font-size:12px;font-weight:500;background:var(--input-bg);color:var(--text);text-align:center;font-family:'JetBrains Mono',monospace;transition:.15s}
-.stat-row input:focus{outline:none;border-color:#4d6bfe;box-shadow:0 0 0 3px rgba(77,107,254,0.15)}
-.stat-row .unit{font-size:11px;color:var(--text3);min-width:16px}
-.stat-row .hint{font-size:10px;color:var(--text3);margin-left:auto;white-space:nowrap}
-.stat-row .upgrade-need{font-size:11px;color:var(--good);min-width:65px;text-align:right;font-weight:600}
-.stat-row .upgrade-need.zero{color:var(--text3);font-weight:400}
-.tooltip-text{display:none;position:absolute;bottom:calc(100%+8px);left:0;background:var(--tooltip-bg);color:var(--tooltip-text);font-size:11px;padding:6px 10px;border-radius:8px;max-width:260px;z-index:100;line-height:1.4;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-.tooltip-text::after{content:'';position:absolute;top:100%;left:20px;border:5px solid transparent;border-top-color:var(--tooltip-bg)}
-.stat-row label:hover+.tooltip-text{display:block}
-.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:6px 0 18px}
-.results-panel{background:var(--result-bg);border-radius:16px;padding:16px 20px;border:1px solid var(--result-border)}
-.results-panel.analysis{background:var(--analysis-bg);border-color:var(--analysis-border)}
-.results-panel .panel-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;gap:8px}
-.results-panel .panel-title .badge{font-size:11px;font-weight:400;color:var(--text3)}
-.results-panel .stat-row{margin-bottom:4px}
-.results-panel .stat-row label{font-size:13px;flex:0 0 100px;border:none;cursor:default}
-.results-panel .stat-row .value{font-weight:600;font-family:'JetBrains Mono',monospace;font-size:14px}
-.results-panel .stat-row .value.crit{color:#b45309}
-.results-panel .stat-row .value.block{color:#4b5563}
-.results-panel .stat-row .value.normal{color:var(--text2)}
-.results-panel .stat-row .value.damage{color:#0b6e4f}
-.action-bar{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 18px;justify-content:center}
-.action-btn{background:var(--card);border:1px solid var(--input-border);color:var(--text);padding:8px 18px;border-radius:30px;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
-.action-btn:hover{background:var(--stat-bg)}
-.action-btn.green{background:var(--good);color:#fff;border-color:var(--good)}
-.action-btn.green:hover{background:#15803d}
-.target-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;margin:6px 0 12px;padding:10px 16px;background:var(--stat-bg);border-radius:12px;border:1px solid var(--stat-border)}
-.target-row label{font-size:14px;color:var(--text2);font-weight:500}
-.target-row input{width:100px;padding:6px 8px;border:1px solid var(--input-border);border-radius:8px;font-size:14px;font-weight:500;background:var(--input-bg);color:var(--text);text-align:center;font-family:'JetBrains Mono',monospace}
-.target-row input:focus{outline:none;border-color:#4d6bfe}
-.target-row .target-hint{font-size:12px;color:var(--text3)}
-.highlight-box{background:var(--card);border-radius:12px;padding:12px 16px;margin-top:10px;border:1px solid var(--border);font-size:13.5px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.highlight-box .tag{background:#4d6bfe;color:#fff;border-radius:40px;padding:0 14px;font-weight:500;font-size:12px;line-height:26px}
-.highlight-box .note{color:var(--text2);font-size:13px}
-.footer{margin-top:16px;font-size:11.5px;color:var(--text3);text-align:center;border-top:1px solid var(--border);padding-top:16px}
-.footer span{background:var(--stat-bg);padding:2px 10px;border-radius:30px}
-input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-input[type=number]{-moz-appearance:textfield}
-.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--tooltip-bg);color:var(--tooltip-text);padding:12px 24px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
-.toast.show{opacity:1}
-@media(max-width:680px){.two-col,.results-grid{grid-template-columns:1fr;gap:16px}.stat-row label{flex:0 0 80px;font-size:11px}.stat-row input{width:60px;font-size:11px}.calculator{padding:18px}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLoN Калькулятор</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="calculator">
-<div class="header">
-<h1>⚔️ TLoN Калькулятор — патч 1.32</h1>
-<button class="theme-toggle" onclick="toggleTheme()">🌓 Тема</button>
-</div>
-<div class="subhead">Крит, Блок и Урон · все расчёты обновляются автоматически</div>
+    <div class="calculator">
+        <div class="header">
+            <h1>⚔️ TLoN Калькулятор</h1>
+            <div style="display:flex;gap:12px;align-items:center;">
+                <span class="status-indicator"><span class="status-dot" id="statusDot"></span><span id="statusText">Автосохранение</span></span>
+                <button class="theme-toggle" onclick="toggleTheme()">🌓 Тема</button>
+            </div>
+        </div>
+        <div class="subhead">Крит, Блок и Урон · все расчёты обновляются автоматически</div>
 
-<div class="target-row">
-<label>🎯 Целевой средний урон:</label>
-<input type="number" id="targetDmg" value="150" step="any" oninput="calc()">
-<span class="target-hint">% от базового</span>
-</div>
+        <div class="target-row">
+            <label>🎯 Целевой средний урон:</label>
+            <input type="number" id="targetDmg" value="150" step="any">
+            <span class="target-hint">% от базового</span>
+        </div>
 
-<div class="two-col">
-<div class="stat-group">
-<h3>🧙 Вы <span class="badge">атакующий</span></h3>
-<div class="stat-row"><label>Шанс Крита</label><input type="number" id="cr" value="0" step="any" oninput="calc()"><span class="unit">%</span><span class="upgrade-need" id="need_cr"></span></div>
-<div class="stat-row"><label>УРН Крита</label><input type="number" id="cdmg" value="0" step="any" oninput="calc()"><span class="unit">%</span><span class="hint">(всего: <span id="total_cdmg">150</span>%)</span><span class="upgrade-need" id="need_cdmg"></span></div>
-<div class="stat-row"><label>Уничтожение</label><input type="number" id="br" value="0" step="any" oninput="calc()"><span class="unit">%</span><span class="upgrade-need" id="need_br"></span></div>
-<div class="stat-row"><label>Игнор. Блока</label><input type="number" id="ig" value="0" step="any" oninput="calc()"><span class="unit">%</span><span class="upgrade-need" id="need_ig"></span></div>
-<div class="stat-row"><label>Подавл. Леч. Блока</label><input type="number" id="brs" value="0" step="any" oninput="calc()"><span class="unit">%</span><span class="upgrade-need" id="need_brs"></span></div>
-</div>
-<div class="stat-group">
-<h3>👹 Противник <span class="badge">атакующий</span></h3>
-<div class="stat-row"><label>Шанс Крита</label><input type="number" id="en_cr" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>УРН Крита</label><input type="number" id="en_cdmg" value="0" step="any" oninput="calc()"><span class="unit">%</span><span class="hint">(всего: <span id="en_total_cdmg">150</span>%)</span></div>
-<div class="stat-row"><label>Уничтожение</label><input type="number" id="en_br" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Игнор. Блока</label><input type="number" id="en_ig" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Подавл. Леч. Блока</label><input type="number" id="en_brs" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-</div>
-</div>
+        <div class="two-col">
+            <div class="stat-group">
+                <h3>🧙 Вы <span class="badge">атакующий</span></h3>
+                <div class="stat-row"><label>Шанс Крита</label><input type="number" id="cr" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_cr"></span></div>
+                <div class="stat-row"><label>УРН Крита</label><input type="number" id="cdmg" value="0" step="any"><span class="unit">%</span><span class="hint">(всего: <span id="total_cdmg">150</span>%)</span><span class="upgrade-need" id="need_cdmg"></span></div>
+                <div class="stat-row"><label>Уничтожение</label><input type="number" id="br" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_br"></span></div>
+                <div class="stat-row"><label>Игнор. Блока</label><input type="number" id="ig" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_ig"></span></div>
+                <div class="stat-row"><label>Подавл. Леч. Блока</label><input type="number" id="brs" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_brs"></span></div>
+            </div>
+            <div class="stat-group">
+                <h3>👹 Противник <span class="badge">атакующий</span></h3>
+                <div class="stat-row"><label>Шанс Крита</label><input type="number" id="en_cr" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>УРН Крита</label><input type="number" id="en_cdmg" value="0" step="any"><span class="unit">%</span><span class="hint">(всего: <span id="en_total_cdmg">150</span>%)</span></div>
+                <div class="stat-row"><label>Уничтожение</label><input type="number" id="en_br" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Игнор. Блока</label><input type="number" id="en_ig" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Подавл. Леч. Блока</label><input type="number" id="en_brs" value="0" step="any"><span class="unit">%</span></div>
+            </div>
+        </div>
 
-<div class="two-col">
-<div class="stat-group" style="border-color:#4d6bfe;">
-<h3>🛡️ Ваши защитные статы <span class="badge">(от противника)</span></h3>
-<div class="stat-row"><label>Иммун. к Криту</label><input type="number" id="def_cr" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Сниж. УРН Крита</label><input type="number" id="def_cdmg" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Шанс Блока</label><input type="number" id="def_blk" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Сниж. УРН Блока</label><input type="number" id="def_bdr" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Лечение Блока</label><input type="number" id="def_brecov" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-</div>
-<div class="stat-group" style="border-color:#dc2626;">
-<h3>🛡️ Защитные статы противника <span class="badge">(от вас)</span></h3>
-<div class="stat-row"><label>Иммун. к Криту</label><input type="number" id="en_def_cr" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Сниж. УРН Крита</label><input type="number" id="en_def_cdmg" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Шанс Блока</label><input type="number" id="en_def_blk" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Сниж. УРН Блока</label><input type="number" id="en_def_bdr" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-<div class="stat-row"><label>Лечение Блока</label><input type="number" id="en_def_brecov" value="0" step="any" oninput="calc()"><span class="unit">%</span></div>
-</div>
-</div>
+        <div class="two-col">
+            <div class="stat-group" style="border-color:#4d6bfe;">
+                <h3>🛡️ Ваши защитные статы <span class="badge">(от противника)</span></h3>
+                <div class="stat-row"><label>Иммун. к Криту</label><input type="number" id="def_cr" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Сниж. УРН Крита</label><input type="number" id="def_cdmg" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Шанс Блока</label><input type="number" id="def_blk" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Сниж. УРН Блока</label><input type="number" id="def_bdr" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Лечение Блока</label><input type="number" id="def_brecov" value="0" step="any"><span class="unit">%</span></div>
+            </div>
+            <div class="stat-group" style="border-color:#dc2626;">
+                <h3>🛡️ Защитные статы противника <span class="badge">(от вас)</span></h3>
+                <div class="stat-row"><label>Иммун. к Криту</label><input type="number" id="en_def_cr" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Сниж. УРН Крита</label><input type="number" id="en_def_cdmg" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Шанс Блока</label><input type="number" id="en_def_blk" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Сниж. УРН Блока</label><input type="number" id="en_def_bdr" value="0" step="any"><span class="unit">%</span></div>
+                <div class="stat-row"><label>Лечение Блока</label><input type="number" id="en_def_brecov" value="0" step="any"><span class="unit">%</span></div>
+            </div>
+        </div>
 
-<div class="action-bar">
-<button class="action-btn" onclick="resetDefault()">↺ Сбросить</button>
-<button class="action-btn green" onclick="exportJSON()">📤 Сохранить как файл</button>
-<button class="action-btn" onclick="document.getElementById('importFile').click()">📥 Загрузить из файла</button>
-<input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
-<span id="statusLabel" style="font-size:12px;color:var(--text3);display:flex;align-items:center;"></span>
-</div>
+        <div class="action-bar">
+            <button class="action-btn" onclick="resetDefault()">↺ Сбросить</button>
+            <button class="action-btn green" onclick="exportJSON()">📤 Сохранить как файл</button>
+            <button class="action-btn" onclick="document.getElementById('importFile').click()">📥 Загрузить из файла</button>
+            <input type="file" id="importFile" accept=".json" style="display:none">
+            <span id="statusLabel" style="font-size:12px;color:var(--text3);display:flex;align-items:center;"></span>
+        </div>
 
-<div class="results-grid">
-<div class="results-panel">
-<div class="panel-title">⚔️ Ваш урон по противнику <span class="badge">(вы → противник)</span></div>
-<div class="stat-row"><label>🟡 Шанс крита</label><span class="value crit" id="myCrit">0.00%</span></div>
-<div class="stat-row"><label>🔵 Шанс блока</label><span class="value block" id="myBlock">0.00%</span></div>
-<div class="stat-row"><label>⚪ Обычный</label><span class="value normal" id="myNormal">0.00%</span></div>
-<div class="stat-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><label>💥 Средний урон</label><span class="value damage" id="myAvg" style="font-size:18px;">0.00%</span></div>
-</div>
-<div class="results-panel">
-<div class="panel-title">🛡️ Урон противника по вам <span class="badge">(противник → вы)</span></div>
-<div class="stat-row"><label>🟡 Шанс крита</label><span class="value crit" id="enemyCrit">0.00%</span></div>
-<div class="stat-row"><label>🔵 Шанс блока</label><span class="value block" id="enemyBlock">0.00%</span></div>
-<div class="stat-row"><label>⚪ Обычный</label><span class="value normal" id="enemyNormal">0.00%</span></div>
-<div class="stat-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><label>💥 Средний урон</label><span class="value damage" id="enemyAvg" style="font-size:18px;">0.00%</span></div>
-</div>
-</div>
+        <div class="results-grid">
+            <div class="results-panel">
+                <div class="panel-title">⚔️ Ваш урон по противнику <span class="badge">(вы → противник)</span></div>
+                <div class="stat-row"><label>🟡 Шанс крита</label><span class="value crit" id="myCrit">0.00%</span></div>
+                <div class="stat-row"><label>🔵 Шанс блока</label><span class="value block" id="myBlock">0.00%</span></div>
+                <div class="stat-row"><label>⚪ Обычный</label><span class="value normal" id="myNormal">0.00%</span></div>
+                <div class="stat-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><label>💥 Средний урон</label><span class="value damage" id="myAvg" style="font-size:18px;">0.00%</span></div>
+            </div>
+            <div class="results-panel">
+                <div class="panel-title">🛡️ Урон противника по вам <span class="badge">(противник → вы)</span></div>
+                <div class="stat-row"><label>🟡 Шанс крита</label><span class="value crit" id="enemyCrit">0.00%</span></div>
+                <div class="stat-row"><label>🔵 Шанс блока</label><span class="value block" id="enemyBlock">0.00%</span></div>
+                <div class="stat-row"><label>⚪ Обычный</label><span class="value normal" id="enemyNormal">0.00%</span></div>
+                <div class="stat-row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;"><label>💥 Средний урон</label><span class="value damage" id="enemyAvg" style="font-size:18px;">0.00%</span></div>
+            </div>
+        </div>
 
-<div class="results-panel analysis">
-<div id="analysis" style="font-size:14px;line-height:1.7;color:var(--text2);">
-Сумма чистых шансов (0.00%) ≤ 100% → крит и блок не конкурируют.
-</div>
-</div>
+        <div class="results-panel analysis">
+            <div id="analysis" style="font-size:14px;line-height:1.7;color:var(--text2);">
+                Сумма чистых шансов (0.00%) ≤ 100% → крит и блок не конкурируют.
+            </div>
+        </div>
 
-<div class="highlight-box"><span class="tag">ℹ️</span><span class="note" id="infoText">net_crit = крит - иммунитет · net_block = блок - уничтожение · Игнор блока влияет на урон</span></div>
-<div class="footer"><span>⚡ Все расчёты обновляются автоматически</span></div>
-</div>
+        <div class="highlight-box"><span class="tag">ℹ️</span><span class="note" id="infoText">net_crit = крит - иммунитет · net_block = блок - уничтожение · Игнор блока влияет на урон</span></div>
+        <div class="footer"><span>⚡ Все расчёты обновляются автоматически · 💾 Данные сохраняются в браузере</span></div>
+    </div>
 
-<div id="toast" class="toast"></div>
+    <div id="toast" class="toast"></div>
 
-<script>
-// ============================================================
-// БАЗОВЫЕ ЗНАЧЕНИЯ (все нулевые)
-// ============================================================
-const IDS = ['cr','cdmg','br','ig','brs','en_cr','en_cdmg','en_br','en_ig','en_brs','def_cr','def_cdmg','def_blk','def_bdr','def_brecov','en_def_cr','en_def_cdmg','en_def_blk','en_def_bdr','en_def_brecov'];
-const ZERO = {};
-for (const id of IDS) ZERO[id] = 0;
-
-// Текущие базовые значения (изначально нулевые)
-let currentDefaults = { ...ZERO };
-
-// ============================================================
-// ОСНОВНОЙ РАСЧЁТ
-// ============================================================
-function getVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
-
-function calcDmg(a, d) {
-    let cd = Math.max(150 + a.cdmg - d.cdmg, 100);
-    let ig = Math.max(a.ig - d.bdr, 0);
-    let brs = Math.min(Math.max(d.brecov - a.brs, 0), 100);
-    let nc = Math.max(a.cr - d.cr, 0);
-    let nb = Math.max(d.blk - a.br, 0);
-    let bd = (1 - (0.5 * (1 - ig/100))) * (1 - brs/100);
-    let cr, bl, wh, bf, total;
-    if (nc + nb > 100) {
-        let r = nc / (nc + nb), b = nb / (nc + nb);
-        cr = Math.min(r, 1); bl = Math.min(b, 1);
-        wh = (1 - cr) * (1 - b);
-        bf = (1 - cr) * b;
-        total = cr * (cd/100) + wh + bf * bd;
-    } else {
-        cr = Math.min(nc/100, 1); bl = Math.min(nb/100, 1);
-        wh = (1 - cr) * (1 - bl);
-        bf = (1 - cr) * bl;
-        total = cr * (cd/100) + wh + bf * bd;
-    }
-    return { crit: cr*100, block: bf*100, normal: wh*100, avg: total*100 };
-}
-
-function calc() {
-    let a = { cr:getVal('cr'), cdmg:getVal('cdmg'), br:getVal('br'), ig:getVal('ig'), brs:getVal('brs') };
-    let ae = { cr:getVal('en_cr'), cdmg:getVal('en_cdmg'), br:getVal('en_br'), ig:getVal('en_ig'), brs:getVal('en_brs') };
-    let d = { cr:getVal('en_def_cr'), cdmg:getVal('en_def_cdmg'), blk:getVal('en_def_blk'), bdr:getVal('en_def_bdr'), brecov:getVal('en_def_brecov') };
-    let dm = { cr:getVal('def_cr'), cdmg:getVal('def_cdmg'), blk:getVal('def_blk'), bdr:getVal('def_bdr'), brecov:getVal('def_brecov') };
-
-    document.getElementById('total_cdmg').textContent = (150 + a.cdmg).toFixed(2);
-    document.getElementById('en_total_cdmg').textContent = (150 + ae.cdmg).toFixed(2);
-
-    let my = calcDmg(a, d);
-    let en = calcDmg(ae, dm);
-
-    document.getElementById('myCrit').textContent = my.crit.toFixed(2) + '%';
-    document.getElementById('myBlock').textContent = my.block.toFixed(2) + '%';
-    document.getElementById('myNormal').textContent = my.normal.toFixed(2) + '%';
-    document.getElementById('myAvg').textContent = my.avg.toFixed(2) + '%';
-
-    document.getElementById('enemyCrit').textContent = en.crit.toFixed(2) + '%';
-    document.getElementById('enemyBlock').textContent = en.block.toFixed(2) + '%';
-    document.getElementById('enemyNormal').textContent = en.normal.toFixed(2) + '%';
-    document.getElementById('enemyAvg').textContent = en.avg.toFixed(2) + '%';
-
-    let nc = Math.max(a.cr - d.cr, 0), nb = Math.max(d.blk - a.br, 0);
-    document.getElementById('analysis').innerHTML = 
-        (nc + nb > 100) ? 
-        `Сумма чистых шансов (${(nc+nb).toFixed(2)}%) > 100% → крит и блок конкурируют.` :
-        `Сумма чистых шансов (${(nc+nb).toFixed(2)}%) ≤ 100% → крит и блок не конкурируют.`;
-
-    // Прокачка
-    let target = getVal('targetDmg');
-    let keys = ['cr','cdmg','br','ig','brs'];
-    let ids = ['need_cr','need_cdmg','need_br','need_ig','need_brs'];
-    function dmgFor(c) {
-        let cd = Math.max(150 + c.cdmg - d.cdmg, 100);
-        let ig = Math.max(c.ig - d.bdr, 0);
-        let brs = Math.min(Math.max(d.brecov - c.brs, 0), 100);
-        let nc = Math.max(c.cr - d.cr, 0);
-        let nb = Math.max(d.blk - c.br, 0);
-        let bd = (1 - (0.5 * (1 - ig/100))) * (1 - brs/100);
-        if (nc + nb > 100) {
-            let r = nc / (nc + nb), b = nb / (nc + nb);
-            let cr = Math.min(r, 1), bl = Math.min(b, 1);
-            let wh = (1 - cr) * (1 - bl), bf = (1 - cr) * bl;
-            return (cr * (cd/100) + wh + bf * bd) * 100;
-        } else {
-            let cr = Math.min(nc/100, 1), bl = Math.min(nb/100, 1);
-            let wh = (1 - cr) * (1 - bl), bf = (1 - cr) * bl;
-            return (cr * (cd/100) + wh + bf * bd) * 100;
-        }
-    }
-    let cur = dmgFor(a);
-    for (let i = 0; i < keys.length; i++) {
-        let k = keys[i], c = {...a}, step = 0, dmg = cur;
-        while (dmg < target && step < 1000) { step += 5; c[k] = a[k] + step; dmg = dmgFor(c); }
-        let el = document.getElementById(ids[i]);
-        if (target <= 0 || target <= cur) { el.textContent = ''; el.className = 'upgrade-need zero'; }
-        else if (step >= 1000) { el.textContent = '∞'; el.className = 'upgrade-need'; }
-        else { el.textContent = `+${step.toFixed(0)}%`; el.className = 'upgrade-need'; }
-    }
-}
-
-// ============================================================
-// СБРОС К ТЕКУЩИМ БАЗОВЫМ ЗНАЧЕНИЯМ
-// ============================================================
-function resetDefault() {
-    for (const id of IDS) {
-        document.getElementById(id).value = currentDefaults[id] || 0;
-    }
-    document.getElementById('targetDmg').value = 150;
-    calc();
-    showToast('↺ Сброшено к базовым значениям');
-}
-
-// ============================================================
-// ЭКСПОРТ / ИМПОРТ
-// ============================================================
-function exportJSON() {
-    let vals = {};
-    for (const id of IDS) vals[id] = parseFloat(document.getElementById(id).value) || 0;
-    vals.target = parseFloat(document.getElementById('targetDmg').value) || 150;
-    const blob = new Blob([JSON.stringify(vals, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tlon_calc_backup.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('📤 Данные сохранены в файл');
-}
-
-function importJSON(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            for (const id of IDS) {
-                if (id in data) document.getElementById(id).value = data[id];
-            }
-            if ('target' in data) document.getElementById('targetDmg').value = data.target;
-            
-            for (const id of IDS) {
-                currentDefaults[id] = parseFloat(document.getElementById(id).value) || 0;
-            }
-            
-            document.getElementById('statusLabel').innerHTML = '✅ Базовые обновлены из файла';
-            calc();
-            showToast('📥 Данные загружены и сохранены как базовые');
-        } catch(err) {
-            showToast('❌ Ошибка импорта');
-        }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-}
-
-function toggleTheme() {
-    let html = document.documentElement;
-    let current = html.get
+    <script src="script.js"></script>
+</body>
+</html>
