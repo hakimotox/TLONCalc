@@ -7,147 +7,148 @@ const IDS = [
     'def_cr', 'def_cdmg', 'def_blk', 'def_bdr', 'def_brecov',
     'en_def_cr', 'en_def_cdmg', 'en_def_blk', 'en_def_bdr', 'en_def_brecov'
 ];
+const DEFAULT_TARGET = 0;
+const DEFAULT_VALUES = Object.fromEntries(IDS.map(id => [id, 0]));
+
+const $ = (id) => document.getElementById(id);
+const getVal = (id) => parseFloat($(id).value) || 0;
+const setVal = (id, val) => { $(id).value = val; };
 
 // ============================================================
-// DOM-УТИЛИТЫ
+// ОРИГИНАЛЬНАЯ ФУНКЦИЯ ИЗ СТАРОГО КАЛЬКУЛЯТОРА (БЕЗ ИЗМЕНЕНИЙ)
 // ============================================================
-function getVal(id) {
-    return parseFloat(document.getElementById(id).value) || 0;
-}
+function calculate(cr, cdmg, br, ig, brs, ten, cdmgr, block, brecov, bdr) {
+    cr = Number(cr);
+    br = Number(br);
+    ig = Number(ig);
+    brs = Number(brs);
+    cdmg = 150 + Number(cdmg);
+    ten = Number(ten);
+    block = Number(block);
+    brecov = Number(brecov);
+    bdr = Number(bdr);
 
-function setVal(id, val) {
-    document.getElementById(id).value = val;
-}
+    if (cdmgr) cdmg -= cdmgr;
+    if (cdmg < 100) cdmg = 100;
+    if (bdr) ig -= bdr;
+    if (brs) brecov -= brs;
+    if (brecov > 100) brecov = 100;
 
-// ============================================================
-// ЯДРО РАСЧЁТА
-// ============================================================
-function calcDmg(attacker, defender) {
-    const cd = Math.max(150 + attacker.cdmg - defender.cdmg, 100);
-    const ig = Math.max(attacker.ig - defender.bdr, 0);
-    const brs = Math.min(Math.max(defender.brecov - attacker.brs, 0), 100);
-    const nc = Math.max(attacker.cr - defender.cr, 0);
-    const nb = Math.max(defender.blk - attacker.br, 0);
-    const bd = (1 - (0.5 * (1 - ig / 100))) * (1 - brs / 100);
+    let net_cr = cr - ten;
+    let net_bl = block - br;
+    net_cr = net_cr < 0 ? 0 : net_cr;
+    net_bl = net_bl < 0 ? 0 : net_bl;
 
-    let crit, block, normal, blocked;
-    if (nc + nb > 100) {
-        const r = nc / (nc + nb);
-        const b = nb / (nc + nb);
-        crit = Math.min(r, 1);
-        blocked = Math.min(b, 1);
-        normal = (1 - crit) * (1 - blocked);
-        blocked = (1 - crit) * blocked;
+    if (net_cr + net_bl > 100) {
+        let crit_rate = net_cr / (net_cr + net_bl);
+        let block_rate = net_bl / (net_cr + net_bl);
+        let crit_chance = crit_rate > 100 ? 100 : crit_rate;
+        let block_rate_final = block_rate > 100 ? 100 : block_rate;
+
+        let white_chance = (1 - crit_chance) * (1 - block_rate_final);
+        let block_chance = (1 - crit_chance) * block_rate_final;
+        let blocked_damage = (1 - (0.5 * (1 - (ig / 100)))) * (1 - brecov / 100);
+        let total_dmg = crit_chance * (cdmg / 100) + white_chance + block_chance * blocked_damage;
+
+        return {
+            crit: crit_chance * 100,
+            block: block_chance * 100,
+            normal: white_chance * 100,
+            avg: total_dmg * 100
+        };
     } else {
-        crit = Math.min(nc / 100, 1);
-        blocked = Math.min(nb / 100, 1);
-        normal = (1 - crit) * (1 - blocked);
-        blocked = (1 - crit) * blocked;
+        let crit_chance = net_cr / 100;
+        if (crit_chance > 1) crit_chance = 1;
+        let block_rate = net_bl / 100;
+        if (block_rate > 1) block_rate = 1;
+
+        let white_chance = (1 - crit_chance) * (1 - block_rate);
+        let block_chance = (1 - crit_chance) * block_rate;
+        let blocked_damage = (1 - (0.5 * (1 - (ig / 100)))) * (1 - brecov / 100);
+        let total_dmg = crit_chance * (cdmg / 100) + white_chance + block_chance * blocked_damage;
+
+        return {
+            crit: crit_chance * 100,
+            block: block_chance * 100,
+            normal: white_chance * 100,
+            avg: total_dmg * 100
+        };
+    }
+}
+
+// ============================================================
+// АНАЛИЗ ПРОКАЧКИ (ЦЕЛЕВОЙ УРОН)
+// ============================================================
+function upgradeAnalysis() {
+    const target = getVal('targetDmg');
+    if (target <= 0) {
+        document.querySelectorAll('.upgrade-need').forEach(el => {
+            el.textContent = '';
+            el.className = 'upgrade-need zero';
+        });
+        return;
     }
 
-    const avg = crit * (cd / 100) + normal + blocked * bd;
-    return { crit: crit * 100, block: blocked * 100, normal: normal * 100, avg: avg * 100 };
-}
+    const a = { cr: getVal('cr'), cdmg: getVal('cdmg'), br: getVal('br'), ig: getVal('ig'), brs: getVal('brs') };
+    const d = { cr: getVal('en_def_cr'), cdmg: getVal('en_def_cdmg'), blk: getVal('en_def_blk'), bdr: getVal('en_def_bdr'), brecov: getVal('en_def_brecov') };
 
-// ============================================================
-// ОСНОВНАЯ ФУНКЦИЯ РАСЧЁТА
-// ============================================================
-function calc() {
-    const a = {
-        cr: getVal('cr'),
-        cdmg: getVal('cdmg'),
-        br: getVal('br'),
-        ig: getVal('ig'),
-        brs: getVal('brs')
-    };
-    const ae = {
-        cr: getVal('en_cr'),
-        cdmg: getVal('en_cdmg'),
-        br: getVal('en_br'),
-        ig: getVal('en_ig'),
-        brs: getVal('en_brs')
-    };
-    const d = {
-        cr: getVal('en_def_cr'),
-        cdmg: getVal('en_def_cdmg'),
-        blk: getVal('en_def_blk'),
-        bdr: getVal('en_def_bdr'),
-        brecov: getVal('en_def_brecov')
-    };
-    const dm = {
-        cr: getVal('def_cr'),
-        cdmg: getVal('def_cdmg'),
-        blk: getVal('def_blk'),
-        bdr: getVal('def_bdr'),
-        brecov: getVal('def_brecov')
-    };
+    function calcDamageForStats(c) {
+        let cr = c.cr;
+        let cdmg = 150 + c.cdmg - d.cdmg;
+        if (cdmg < 100) cdmg = 100;
+        let br = c.br;
+        let ig = c.ig - d.bdr;
+        if (ig < 0) ig = 0;
+        let brs = c.brs;
+        let ten = d.cr;
+        let block = d.blk;
+        let brecov = d.brecov - brs;
+        if (brecov < 0) brecov = 0;
+        if (brecov > 100) brecov = 100;
 
-    document.getElementById('total_cdmg').textContent = (150 + a.cdmg).toFixed(2);
-    document.getElementById('en_total_cdmg').textContent = (150 + ae.cdmg).toFixed(2);
+        let net_cr = cr - ten;
+        if (net_cr < 0) net_cr = 0;
+        let net_bl = block - br;
+        if (net_bl < 0) net_bl = 0;
 
-    const my = calcDmg(a, d);
-    const en = calcDmg(ae, dm);
+        if (net_cr + net_bl > 100) {
+            let crit_rate = net_cr / (net_cr + net_bl);
+            let block_rate = net_bl / (net_cr + net_bl);
+            let crit_chance = crit_rate > 100 ? 100 : crit_rate;
+            let block_rate_final = block_rate > 100 ? 100 : block_rate;
 
-    document.getElementById('myCrit').textContent = my.crit.toFixed(2) + '%';
-    document.getElementById('myBlock').textContent = my.block.toFixed(2) + '%';
-    document.getElementById('myNormal').textContent = my.normal.toFixed(2) + '%';
-    document.getElementById('myAvg').textContent = my.avg.toFixed(2) + '%';
+            let white_chance = (1 - crit_chance) * (1 - block_rate_final);
+            let block_chance = (1 - crit_chance) * block_rate_final;
+            let blocked_damage = (1 - (0.5 * (1 - (ig / 100)))) * (1 - brecov / 100);
+            return (crit_chance * (cdmg / 100) + white_chance + block_chance * blocked_damage) * 100;
+        } else {
+            let crit_chance = net_cr / 100;
+            if (crit_chance > 1) crit_chance = 1;
+            let block_rate = net_bl / 100;
+            if (block_rate > 1) block_rate = 1;
 
-    document.getElementById('enemyCrit').textContent = en.crit.toFixed(2) + '%';
-    document.getElementById('enemyBlock').textContent = en.block.toFixed(2) + '%';
-    document.getElementById('enemyNormal').textContent = en.normal.toFixed(2) + '%';
-    document.getElementById('enemyAvg').textContent = en.avg.toFixed(2) + '%';
+            let white_chance = (1 - crit_chance) * (1 - block_rate);
+            let block_chance = (1 - crit_chance) * block_rate;
+            let blocked_damage = (1 - (0.5 * (1 - (ig / 100)))) * (1 - brecov / 100);
+            return (crit_chance * (cdmg / 100) + white_chance + block_chance * blocked_damage) * 100;
+        }
+    }
 
-    const nc = Math.max(a.cr - d.cr, 0);
-    const nb = Math.max(d.blk - a.br, 0);
-    document.getElementById('analysis').innerHTML =
-        (nc + nb > 100) ?
-        `Сумма чистых шансов (${(nc + nb).toFixed(2)}%) > 100% → крит и блок конкурируют.` :
-        `Сумма чистых шансов (${(nc + nb).toFixed(2)}%) ≤ 100% → крит и блок не конкурируют.`;
-
-    // Анализ прокачки
-    const target = getVal('targetDmg');
+    const currentDmg = calcDamageForStats(a);
     const keys = ['cr', 'cdmg', 'br', 'ig', 'brs'];
     const ids = ['need_cr', 'need_cdmg', 'need_br', 'need_ig', 'need_brs'];
 
-    function dmgFor(c) {
-        const cd = Math.max(150 + c.cdmg - d.cdmg, 100);
-        const ig = Math.max(c.ig - d.bdr, 0);
-        const brs = Math.min(Math.max(d.brecov - c.brs, 0), 100);
-        const nc = Math.max(c.cr - d.cr, 0);
-        const nb = Math.max(d.blk - c.br, 0);
-        const bd = (1 - (0.5 * (1 - ig / 100))) * (1 - brs / 100);
-
-        if (nc + nb > 100) {
-            const r = nc / (nc + nb);
-            const b = nb / (nc + nb);
-            const crit = Math.min(r, 1);
-            const blocked = Math.min(b, 1);
-            const normal = (1 - crit) * (1 - blocked);
-            const blockedFinal = (1 - crit) * blocked;
-            return (crit * (cd / 100) + normal + blockedFinal * bd) * 100;
-        } else {
-            const crit = Math.min(nc / 100, 1);
-            const blocked = Math.min(nb / 100, 1);
-            const normal = (1 - crit) * (1 - blocked);
-            const blockedFinal = (1 - crit) * blocked;
-            return (crit * (cd / 100) + normal + blockedFinal * bd) * 100;
-        }
-    }
-
-    const cur = dmgFor(a);
-    for (let i = 0; i < keys.length; i++) {
-        const k = keys[i];
+    keys.forEach((k, i) => {
         const c = { ...a };
         let step = 0;
-        let dmg = cur;
+        let dmg = currentDmg;
         while (dmg < target && step < 1000) {
             step += 5;
             c[k] = a[k] + step;
-            dmg = dmgFor(c);
+            dmg = calcDamageForStats(c);
         }
         const el = document.getElementById(ids[i]);
-        if (target <= 0 || target <= cur) {
+        if (target <= currentDmg) {
             el.textContent = '';
             el.className = 'upgrade-need zero';
         } else if (step >= 1000) {
@@ -157,7 +158,66 @@ function calc() {
             el.textContent = `+${step.toFixed(0)}%`;
             el.className = 'upgrade-need';
         }
+    });
+}
+
+// ============================================================
+// ОСНОВНАЯ ФУНКЦИЯ
+// ============================================================
+function calc() {
+    const my = calculate(
+        getVal('cr'),
+        getVal('cdmg'),
+        getVal('br'),
+        getVal('ig'),
+        getVal('brs'),
+        getVal('en_def_cr'),
+        getVal('en_def_cdmg'),
+        getVal('en_def_blk'),
+        getVal('en_def_brecov'),
+        getVal('en_def_bdr')
+    );
+
+    const en = calculate(
+        getVal('en_cr'),
+        getVal('en_cdmg'),
+        getVal('en_br'),
+        getVal('en_ig'),
+        getVal('en_brs'),
+        getVal('def_cr'),
+        getVal('def_cdmg'),
+        getVal('def_blk'),
+        getVal('def_brecov'),
+        getVal('def_bdr')
+    );
+
+    $('myCrit').textContent = my.crit.toFixed(2) + '%';
+    $('myBlock').textContent = my.block.toFixed(2) + '%';
+    $('myNormal').textContent = my.normal.toFixed(2) + '%';
+    $('myAvg').textContent = my.avg.toFixed(2) + '%';
+
+    $('enemyCrit').textContent = en.crit.toFixed(2) + '%';
+    $('enemyBlock').textContent = en.block.toFixed(2) + '%';
+    $('enemyNormal').textContent = en.normal.toFixed(2) + '%';
+    $('enemyAvg').textContent = en.avg.toFixed(2) + '%';
+
+    const nc = Math.max(getVal('cr') - getVal('en_def_cr'), 0);
+    const nb = Math.max(getVal('en_def_blk') - getVal('br'), 0);
+    const total = nc + nb;
+
+    $('netCritDisplay').textContent = nc.toFixed(2) + '%';
+    $('netBlockDisplay').textContent = nb.toFixed(2) + '%';
+
+    const conclusion = $('analysisConclusion');
+    if (total > 100) {
+        conclusion.className = 'analysis-conclusion warning';
+        conclusion.innerHTML = `⚠️ Сумма чистых шансов (${total.toFixed(2)}%) превышает 100%. Крит и блок конкурируют. Увеличение одного параметра снижает эффективность другого.`;
+    } else {
+        conclusion.className = 'analysis-conclusion good';
+        conclusion.innerHTML = `✅ Сумма чистых шансов (${total.toFixed(2)}%) ≤ 100%. Крит и блок не конкурируют. Вы можете свободно увеличивать оба параметра.`;
     }
+
+    upgradeAnalysis();
 }
 
 // ============================================================
@@ -169,8 +229,8 @@ function saveState() {
     data.target = getVal('targetDmg');
     try {
         localStorage.setItem('tloncalc_v2', JSON.stringify(data));
-        document.getElementById('statusDot').className = 'status-dot saved';
-        document.getElementById('statusText').textContent = 'Сохранено';
+        $('statusDot').className = 'status-dot saved';
+        $('statusText').textContent = 'Сохранено';
     } catch (_) {}
 }
 
@@ -179,10 +239,8 @@ function loadState() {
         const raw = localStorage.getItem('tloncalc_v2');
         if (!raw) return false;
         const data = JSON.parse(raw);
-        IDS.forEach(id => {
-            if (id in data) setVal(id, data[id]);
-        });
-        if ('target' in data)  data.target);
+        IDS.forEach(id => { if (id in data) setVal(id, data[id]); });
+        if ('target' in data) setVal('targetDmg', data.target);
         return true;
     } catch (_) { return false; }
 }
@@ -191,11 +249,11 @@ function loadState() {
 // СБРОС
 // ============================================================
 function resetDefault() {
-    IDS.forEach(id => setVal(id, 0));
-     0);
+    IDS.forEach(id => setVal(id, DEFAULT_VALUES[id] || 0));
+    setVal('targetDmg', DEFAULT_TARGET);
     calc();
     saveState();
-    showToast('↺ Сброшено к нулевым значениям');
+    showToast('↺ Сброшено к базовым значениям');
 }
 
 // ============================================================
@@ -245,75 +303,44 @@ function toggleTheme() {
 }
 
 // ============================================================
-// TOAST (ВСПЛЫВАЮЩИЕ УВЕДОМЛЕНИЯ)
+// TOAST
 // ============================================================
 let toastTimeout;
 
 function showToast(msg) {
-    const el = document.getElementById('toast');
+    const el = $('toast');
     if (!el) return;
     el.textContent = msg;
     el.className = 'toast show';
     clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-        el.className = 'toast';
-    }, 2500);
-}
-
-// ============================================================
-// ПРИВЯЗКА СОБЫТИЙ
-// ============================================================
-function bindEvents() {
-    // Все поля ввода
-    document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', function() {
-            calc();
-            // Автосохранение с задержкой
-            clearTimeout(window.saveTimeout);
-            window.saveTimeout = setTimeout(saveState, 300);
-        });
-    });
-
-    // Кнопка импорта
-    const importBtn = document.getElementById('importFile');
-    if (importBtn) {
-        importBtn.addEventListener('change', importJSON);
-    }
-
-    // Кнопка сброса уже привязана через onclick в HTML
+    toastTimeout = setTimeout(() => el.className = 'toast', 2500);
 }
 
 // ============================================================
 // ИНИЦИАЛИЗАЦИЯ
 // ============================================================
 function init() {
-    // Загрузка темы
     const savedTheme = localStorage.getItem('tlon_theme');
-    if (savedTheme) {
-        document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-
-    // Загрузка состояния
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
     const hasSaved = loadState();
-
-    // Первый расчёт
     calc();
-
-    // Обновление индикатора
     if (hasSaved) {
-        document.getElementById('statusDot').className = 'status-dot saved';
-        document.getElementById('statusText').textContent = 'Загружено';
+        $('statusDot').className = 'status-dot saved';
+        $('statusText').textContent = 'Загружено';
     }
-
-    // Привязка событий
-    bindEvents();
-
-    console.log('⚔️ TLoN Калькулятор v1.32 — автосохранение активно');
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', () => {
+            calc();
+            clearTimeout(window.saveTimeout);
+            window.saveTimeout = setTimeout(saveState, 300);
+        });
+    });
+    $('themeBtn').addEventListener('click', toggleTheme);
+    $('resetBtn').addEventListener('click', resetDefault);
+    $('exportBtn').addEventListener('click', exportJSON);
+    $('importBtn').addEventListener('click', () => $('importFile').click());
+    $('importFile').addEventListener('change', importJSON);
+    console.log('⚔️ TLoN Калькулятор v1.32 — готов к работе');
 }
 
-// Запуск после загрузки DOM
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+document.addEventListener('DOMContentLoaded', init);
