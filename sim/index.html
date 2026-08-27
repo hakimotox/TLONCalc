@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор эмблем гильдии</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="simulator">
+        <div class="header">
+            <h1>🛡️ Симулятор эмблем гильдии</h1>
+            <div style="display:flex;gap:12px;align-items:center;">
+                <span class="status-indicator"><span class="status-dot" id="statusDot"></span><span id="statusText">Автосохранение</span></span>
+                <button class="theme-toggle" id="themeBtn">🌓 Тема</button>
+                <a href="../calculator/index.html" class="action-btn" style="text-decoration:none;">⚔️ Калькулятор</a>
+            </div>
+        </div>
+        <div class="subhead">Выберите эмблемы для расчёта суммарных цветовых очков · максимум 30</div>
+
+        <!-- Итоговые очки -->
+        <div class="total-box" id="colorbox">
+            <span class="total-label">📊 Итоговые очки:</span>
+            <div class="color-badges">
+                <span class="badge red" id="red">0</span>
+                <span class="badge blue" id="blue">0</span>
+                <span class="badge green" id="green">0</span>
+            </div>
+            <button class="reset-btn" onclick="resetSelection()">↺ Сбросить</button>
+        </div>
+
+        <!-- Список эмблем -->
+        <div class="emblems-grid">
+            <div class="emblem-column red-column">
+                <h3>🔴 Красные</h3>
+                <div id="red-selector"></div>
+            </div>
+            <div class="emblem-column blue-column">
+                <h3>🔵 Синие</h3>
+                <div id="blue-selector"></div>
+            </div>
+            <div class="emblem-column green-column">
+                <h3>🟢 Зелёные</h3>
+                <div id="green-selector"></div>
+            </div>
+        </div>
+
+        <!-- Описание -->
+        <div class="desc-box" id="desc">
+            ...
+        </div>
+
+        <div class="footer"><span>⚡ Все изменения сохраняются автоматически · 💾 Данные в браузере</span></div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

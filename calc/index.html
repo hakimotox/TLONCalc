@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLoN Калькулятор</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="calculator">
+        <div class="header">
+            <h1>⚔️ TLoN Калькулятор</h1>
+            <div style="display:flex;gap:12px;align-items:center;">
+                <span class="status-indicator"><span class="status-dot" id="statusDot"></span><span id="statusText">Автосохранение</span></span>
+                <button class="theme-toggle" id="themeBtn">🌓 Тема</button>
+            </div>
+        </div>
+        <div class="subhead">Крит, Блок и Урон · все расчёты обновляются автоматически</div>
+
+        <div class="target-row">
+            <label>🎯 Целевой средний урон:</label>
+            <input type="number" id="targetDmg" value="0" step="any">
+            <span class="target-hint">% от базового</span>
+        </div>
+
+        <!-- СИНЯЯ РАМКА — ВСЕ ТВОИ СТАТЫ -->
+        <div class="stat-group player-group" style="margin-bottom:28px;">
+            <h3>🧙 Ваши статы <span class="badge">вы</span></h3>
+            <div class="two-col" style="margin-bottom:0;">
+                <div>
+                    <h4 style="font-size:13px;color:var(--text3);margin-bottom:10px;font-weight:500;">⚔️ Атакующие</h4>
+                    <div class="stat-row"><label title="Шанс Крита в основном зависит от значения Крита. Шанс срабатывания Крита при атаке, при срабатывании Крита может нанести 150% УРН.">Шанс Крита</label><input type="number" id="cr" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_cr"></span></div>
+                    <div class="stat-row"><label title="Увеличивает УРН при срабатывании собственного Крита. База: 150%.">УРН Крита</label><input type="number" id="cdmg" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_cdmg"></span></div>
+                    <div class="stat-row"><label title="Шанс Уничтожения в основном зависит от значения Уничтожения. Взаимно нейтрализует Шанс Блока, может снизить Шанс Блока противника.">Уничтожение</label><input type="number" id="br" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_br"></span></div>
+                    <div class="stat-row"><label title="При нанесении УРН цели, если цель активирует эффект Блока, сокращение УРН уменьшается на значение Игнора Блока.">Игнор. Блока</label><input type="number" id="ig" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_ig"></span></div>
+                    <div class="stat-row"><label title="При нанесении УРН по цели, если цель активирует эффект Блока, уменьшает количество ОЗ, восстанавливаемого при Блоке.">Подавл. Леч. Блока</label><input type="number" id="brs" value="0" step="any"><span class="unit">%</span><span class="upgrade-need" id="need_brs"></span></div>
+                </div>
+                <div>
+                    <h4 style="font-size:13px;color:var(--text3);margin-bottom:10px;font-weight:500;">🛡️ Защитные</h4>
+                    <div class="stat-row"><label title="Шанс Иммун. Крита в основном зависит от значения Прочности. Взаимно нейтрализует Шанс Крита, может снизить шанс получения по себе Крита.">Иммун. к Криту</label><input type="number" id="def_cr" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Уменьшает получаемый от Крита УРН.">Сниж. УРН Крита</label><input type="number" id="def_cdmg" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Шанс Блока в основном зависит от значения Блока. Вероятность срабатывания Блока при получении УРН, когда Блок срабатывает, получаемый УРН уменьшается на 50%.">Шанс Блока</label><input type="number" id="def_blk" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="При срабатывании своего Блока, получаемый УРН снижается в определённой пропорции. База: 50%.">Сниж. УРН Блока</label><input type="number" id="def_bdr" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="При срабатывании своего Блока, может восстановить ОЗ, равное проценту нанесённого блоком урона. База: 100%.">Лечение Блока</label><input type="number" id="def_brecov" value="0" step="any"><span class="unit">%</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- КРАСНАЯ РАМКА — ВСЕ СТАТЫ ПРОТИВНИКА -->
+        <div class="stat-group enemy-group" style="margin-bottom:28px;">
+            <h3>👹 Статы противника <span class="badge">противник</span></h3>
+            <div class="two-col" style="margin-bottom:0;">
+                <div>
+                    <h4 style="font-size:13px;color:var(--text3);margin-bottom:10px;font-weight:500;">⚔️ Атакующие</h4>
+                    <div class="stat-row"><label title="Шанс Крита противника.">Шанс Крита</label><input type="number" id="en_cr" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="УРН Крита противника. База: 150%.">УРН Крита</label><input type="number" id="en_cdmg" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Уничтожение противника.">Уничтожение</label><input type="number" id="en_br" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Игнор Блока противника.">Игнор. Блока</label><input type="number" id="en_ig" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Подавление Лечения Блока противника.">Подавл. Леч. Блока</label><input type="number" id="en_brs" value="0" step="any"><span class="unit">%</span></div>
+                </div>
+                <div>
+                    <h4 style="font-size:13px;color:var(--text3);margin-bottom:10px;font-weight:500;">🛡️ Защитные</h4>
+                    <div class="stat-row"><label title="Иммунитет к Криту противника.">Иммун. к Криту</label><input type="number" id="en_def_cr" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Снижение УРН Крита противника.">Сниж. УРН Крита</label><input type="number" id="en_def_cdmg" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Шанс Блока противника.">Шанс Блока</label><input type="number" id="en_def_blk" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Снижение УРН Блока противника.">Сниж. УРН Блока</label><input type="number" id="en_def_bdr" value="0" step="any"><span class="unit">%</span></div>
+                    <div class="stat-row"><label title="Лечение Блока противника.">Лечение Блока</label><input type="number" id="en_def_brecov" value="0" step="any"><span class="unit">%</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button class="action-btn" id="resetBtn">↺ Сбросить</button>
+            <button class="action-btn green" id="exportBtn">📤 Сохранить как файл</button>
+            <button class="action-btn" id="importBtn">📥 Загрузить из файла</button>
+            <input type="file" id="importFile" accept=".json" style="display:none">
+            <span id="statusLabel" style="font-size:12px;color:var(--text3);display:flex;align-items:center;"></span>
+        </div>
+
+        <div class="results-grid">
+            <div class="results-panel">
+                <div class="panel-title">⚔️ Ваш урон по противнику <span class="badge">(вы → противник)</span></div>
+                <div class="stat-row"><label>🟡 Шанс крита</label><span class="value crit" id="myCrit">0.00%</span></div>
+                <div class="stat-row"><label>🔵 Шанс блока</label><span class="value block" id="myBlock">0.00%</span></div>
+                <div class="stat-row"><label>⚪ Обычный</label><span class="value normal" id="myNormal">0.00%</span></div>
+                <div class="stat-row damage-row"><label>💥 Средний урон</label><span class="value damage" id="myAvg">0.00%</span></div>
+            </div>
+            <div class="results-panel">
+                <div class="panel-title">🛡️ Урон противника по вам <span class="badge">(противник → вы)</span></div>
+                <div class="stat-row"><label>🟡 Шанс крита</label><span class="value crit" id="enemyCrit">0.00%</span></div>
+                <div class="stat-row"><label>🔵 Шанс блока</label><span class="value block" id="enemyBlock">0.00%</span></div>
+                <div class="stat-row"><label>⚪ Обычный</label><span class="value normal" id="enemyNormal">0.00%</span></div>
+                <div class="stat-row damage-row"><label>💥 Средний урон</label><span class="value damage" id="enemyAvg">0.00%</span></div>
+            </div>
+        </div>
+
+        <!-- ИТОГОВЫЙ АНАЛИЗ -->
+        <div class="analysis-container">
+            <div class="analysis-header">📊 Итоговый анализ</div>
+            <div class="analysis-body">
+                <div class="analysis-item">
+                    <span class="analysis-label">Чистый шанс крита (ваш крит − иммунитет противника) :</span>
+                    <span class="analysis-value" id="netCritDisplay">0.00%</span>
+                </div>
+                <div class="analysis-item">
+                    <span class="analysis-label">Чистый шанс блока (блок противника − ваше уничтожение) :</span>
+                    <span class="analysis-value" id="netBlockDisplay">0.00%</span>
+                </div>
+                <div class="analysis-conclusion good" id="analysisConclusion">
+                    ✅ Сумма чистых шансов (0.00%) ≤ 100%. Крит и блок не конкурируют. Вы можете свободно увеличивать оба параметра.
+                </div>
+            </div>
+        </div>
+
+        <div class="footer"><span>⚡ Все расчёты обновляются автоматически · 💾 Данные сохраняются в браузере</span></div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
