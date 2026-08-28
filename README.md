@@ -1,5 +1,3 @@
-# ⚔️ TLoNKit — Набор инструментов для The Legend of Neverland
-
 **TLoNKit** — это коллекция веб-инструментов для игры **The Legend Of Neverland (TLoN)**, созданная для удобства игроков. Включает в себя Калькулятор боевых параметров и Симулятор эмблем гильдии.
 
 Переход к проекту: [TLoN Kit](https://hakimotox.github.io/TLoNKit/)
