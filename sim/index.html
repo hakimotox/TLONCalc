@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html lang="ru" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Симулятор эмблем гильдии</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TLoN Симулятор</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div class="simulator">
+        <!-- ШАПКА -->
         <div class="header">
-            <h1>🛡️ Симулятор эмблем гильдии</h1>
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                <a href="../index.html" class="nav-btn">🏠 Главная</a>
+                <a href="../calc/index.html" class="nav-btn">📊 Калькулятор</a>
+            </div>
             <div style="display:flex;gap:12px;align-items:center;">
-                <span class="status-indicator"><span class="status-dot" id="statusDot"></span><span id="statusText">Автосохранение</span></span>
+                <span class="status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Автосохранение</span>
+                </span>
                 <button class="theme-toggle" id="themeBtn">🌓 Тема</button>
-                <a href="../calculator/index.html" class="action-btn" style="text-decoration:none;">⚔️ Калькулятор</a>
             </div>
         </div>
-        <div class="subhead">Выберите эмблемы для расчёта суммарных цветовых очков · максимум 30</div>
 
-        <!-- Итоговые очки -->
+        <h1>🛡️ TLoN Симулятор</h1>
+        <div class="subhead">Симулятор эмблем гильдии · все расчёты сохраняются автоматически</div>
+
+        <!-- Блок итоговых очков -->
         <div class="total-box" id="colorbox">
             <span class="total-label">📊 Итоговые очки:</span>
             <div class="color-badges">
@@ -27,32 +35,44 @@
                 <span class="badge green" id="green">0</span>
             </div>
             <button class="reset-btn" onclick="resetSelection()">↺ Сбросить</button>
+            <button class="save-btn" id="save-build-btn">💾 Сохранить билд</button>
         </div>
 
-        <!-- Список эмблем -->
+        <!-- Три колонки гербов -->
         <div class="emblems-grid">
             <div class="emblem-column red-column">
-                <h3>🔴 Красные</h3>
+                <h3>🔴 Красный герб</h3>
                 <div id="red-selector"></div>
             </div>
             <div class="emblem-column blue-column">
-                <h3>🔵 Синие</h3>
+                <h3>🔵 Синий герб</h3>
                 <div id="blue-selector"></div>
             </div>
             <div class="emblem-column green-column">
-                <h3>🟢 Зелёные</h3>
+                <h3>🟢 Зелёный герб</h3>
                 <div id="green-selector"></div>
             </div>
         </div>
 
-        <!-- Описание -->
-        <div class="desc-box" id="desc">
-            ...
+        <!-- Блок описания -->
+        <div class="desc-box" id="desc">💡 Выберите эмблемы. Максимум 3 в каждом гербе.</div>
+
+        <!-- Блок истории -->
+        <div class="history-box">
+            <div class="history-header">
+                <span>📜 История билдов</span>
+                <button class="history-clear-btn" id="clear-history-btn">🗑️ Очистить</button>
+            </div>
+            <div id="history-list" class="history-list"></div>
         </div>
 
-        <div class="footer"><span>⚡ Все изменения сохраняются автоматически · 💾 Данные в браузере</span></div>
+        <!-- Футер -->
+        <div class="footer">
+            <span>⚡ Все изменения сохраняются автоматически · 💾 Данные сохраняются в браузере</span>
+        </div>
     </div>
 
+    <!-- Тост-уведомления -->
     <div id="toast" class="toast"></div>
 
     <script src="script.js"></script>
